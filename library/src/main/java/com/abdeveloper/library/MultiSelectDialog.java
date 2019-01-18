@@ -1,6 +1,8 @@
 package com.abdeveloper.library;
 
 import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatDialogFragment;
@@ -11,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,7 +30,11 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
     private float titleSize = 25;
     private String positiveText = "DONE";
     private String negativeText = "CANCEL";
-    private TextView dialogTitle, dialogSubmit, dialogCancel;
+    private Integer positiveTextColor = null;
+    private Integer negativeTextColor = null;
+
+    private TextView dialogTitle;
+    private Button dialogSubmit, dialogCancel;
     private ArrayList<Integer> previouslySelectedIdsList = new ArrayList<>();
 
 
@@ -54,11 +61,11 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
         dialog.setContentView(R.layout.custom_multi_select);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
-        RecyclerViewEmptySupport mrecyclerView =  dialog.findViewById(R.id.recycler_view);
-        SearchView searchView =  dialog.findViewById(R.id.search_view);
-        dialogTitle =  dialog.findViewById(R.id.title);
-        dialogSubmit =  dialog.findViewById(R.id.done);
-        dialogCancel =  dialog.findViewById(R.id.cancel);
+        RecyclerViewEmptySupport mrecyclerView = dialog.findViewById(R.id.recycler_view);
+        SearchView searchView = dialog.findViewById(R.id.search_view);
+        dialogTitle = dialog.findViewById(R.id.title);
+        dialogSubmit = dialog.findViewById(R.id.done);
+        dialogCancel = dialog.findViewById(R.id.cancel);
 
         mrecyclerView.setEmptyView(dialog.findViewById(R.id.list_empty1));
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
@@ -96,10 +103,21 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
         return this;
     }
 
+    public MultiSelectDialog positiveTextColor(@NonNull int color) {
+        this.positiveTextColor = color;
+        return this;
+    }
+
     public MultiSelectDialog negativeText(@NonNull String message) {
         this.negativeText = message;
         return this;
     }
+
+    public MultiSelectDialog negativeTextColor(@NonNull int color) {
+        this.negativeTextColor = color;
+        return this;
+    }
+
 
     public MultiSelectDialog preSelectIDsList(ArrayList<Integer> list) {
         this.previouslySelectedIdsList = list;
@@ -110,30 +128,30 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
     public MultiSelectDialog multiSelectList(ArrayList<MultiSelectModel> list) {
         this.mainListOfAdapter = list;
         this.tempMainListOfAdapter = new ArrayList<>(mainListOfAdapter);
-        if(maxSelectionLimit == 0)
+        if (maxSelectionLimit == 0)
             maxSelectionLimit = list.size();
         return this;
     }
-	
-    public MultiSelectDialog setMaxSelectionLimit(int limit){
+
+    public MultiSelectDialog setMaxSelectionLimit(int limit) {
         this.maxSelectionLimit = limit;
         return this;
     }
-	
-	public MultiSelectDialog setMaxSelectionMessage(String message) {
-		this.maxSelectionMessage = message;
-		return this;
-	}
-	
-    public MultiSelectDialog setMinSelectionLimit(int limit){
+
+    public MultiSelectDialog setMaxSelectionMessage(String message) {
+        this.maxSelectionMessage = message;
+        return this;
+    }
+
+    public MultiSelectDialog setMinSelectionLimit(int limit) {
         this.minSelectionLimit = limit;
         return this;
     }
-	
-	public MultiSelectDialog setMinSelectionMessage(String message) {
-		this.minSelectionMessage = message;
-		return this;
-	}
+
+    public MultiSelectDialog setMinSelectionMessage(String message) {
+        this.minSelectionMessage = message;
+        return this;
+    }
 
     public MultiSelectDialog onSubmit(@NonNull SubmitCallbackListener callback) {
         this.submitCallbackListener = callback;
@@ -145,6 +163,14 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
         dialogTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, titleSize);
         dialogSubmit.setText(positiveText.toUpperCase());
         dialogCancel.setText(negativeText.toUpperCase());
+
+        if (positiveTextColor != null) {
+            dialogSubmit.setTextColor(positiveTextColor);
+        }
+
+        if (negativeTextColor != null) {
+            dialogCancel.setTextColor(negativeTextColor);
+        }
     }
 
     private ArrayList<MultiSelectModel> setCheckedIDS(ArrayList<MultiSelectModel> multiselectdata, ArrayList<Integer> listOfIdsSelected) {
@@ -189,6 +215,12 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
         mainListOfAdapter = setCheckedIDS(mainListOfAdapter, selectedIdsForCallback);
         ArrayList<MultiSelectModel> filteredlist = filter(mainListOfAdapter, newText);
         mutliSelectAdapter.setData(filteredlist, newText.toLowerCase(), mutliSelectAdapter);
+        mutliSelectAdapter.setOnItemCallbackListener(new MutliSelectAdapter.ItemCallbackListener() {
+            @Override
+            public void onItemSelected(Integer id, String name) {
+                submitCallbackListener.onItemSelected(id, name);
+            }
+        });
         return false;
     }
 
@@ -204,7 +236,7 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
                     //to remember last selected ids which were successfully done
                     tempPreviouslySelectedIdsList = new ArrayList<>(callBackListOfIds);
 
-                    if(submitCallbackListener !=null) {
+                    if (submitCallbackListener != null) {
                         submitCallbackListener.onSelected(callBackListOfIds, getSelectNameList(), getSelectedDataString());
                     }
                     dismiss();
@@ -214,10 +246,9 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
                     String option = getResources().getString(R.string.option);
                     String message = "";
 
-                    if(this.maxSelectionMessage != null) {
+                    if (this.maxSelectionMessage != null) {
                         message = maxSelectionMessage;
-                    }
-                    else {
+                    } else {
                         if (maxSelectionLimit > 1)
                             message = youCan + " " + maxSelectionLimit + " " + options;
                         else
@@ -231,10 +262,9 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
                 String option = getResources().getString(R.string.option);
                 String message = "";
 
-                if(this.minSelectionMessage != null) {
+                if (this.minSelectionMessage != null) {
                     message = minSelectionMessage;
-                }
-                else {
+                } else {
                     if (minSelectionLimit > 1)
                         message = pleaseSelect + " " + minSelectionLimit + " " + options;
                     else
@@ -245,7 +275,7 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
         }
 
         if (view.getId() == R.id.cancel) {
-            if(submitCallbackListener!=null){
+            if (submitCallbackListener != null) {
                 selectedIdsForCallback.clear();
                 selectedIdsForCallback.addAll(tempPreviouslySelectedIdsList);
                 submitCallbackListener.onCancel();
@@ -270,8 +300,8 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
 
     private ArrayList<String> getSelectNameList() {
         ArrayList<String> names = new ArrayList<>();
-        for(int i=0;i<tempMainListOfAdapter.size();i++){
-            if(checkForSelection(tempMainListOfAdapter.get(i).getId())){
+        for (int i = 0; i < tempMainListOfAdapter.size(); i++) {
+            if (checkForSelection(tempMainListOfAdapter.get(i).getId())) {
                 names.add(tempMainListOfAdapter.get(i).getName());
             }
         }
@@ -293,7 +323,10 @@ public class MultiSelectDialog extends AppCompatDialogFragment implements Search
 
     public interface SubmitCallbackListener {
         void onSelected(ArrayList<Integer> selectedIds, ArrayList<String> selectedNames, String commonSeperatedData);
+
         void onCancel();
+
+        void onItemSelected(Integer selectedId, String selectedName);
     }
 
 }
