@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -22,6 +23,7 @@ class MutliSelectAdapter extends RecyclerView.Adapter<MutliSelectAdapter.MultiSe
     private ArrayList<MultiSelectModel> mDataSet = new ArrayList<>();
     private String mSearchQuery = "";
     private Context mContext;
+    private ItemCallbackListener itemCallbackListener;
 
     MutliSelectAdapter(ArrayList<MultiSelectModel> dataSet, Context context) {
         this.mDataSet = dataSet;
@@ -79,12 +81,15 @@ class MutliSelectAdapter extends RecyclerView.Adapter<MutliSelectAdapter.MultiSe
                     holder.dialog_item_checkbox.setChecked(true);
                     mDataSet.get(holder.getAdapterPosition()).setSelected(true);
                     notifyItemChanged(holder.getAdapterPosition());
+
+                    itemCallbackListener.onItemSelected(mDataSet.get(holder.getAdapterPosition()).getId(),mDataSet.get(holder.getAdapterPosition()).getName());
                 } else {
                     removeFromSelection(mDataSet.get(holder.getAdapterPosition()).getId());
                     holder.dialog_item_checkbox.setChecked(false);
                     mDataSet.get(holder.getAdapterPosition()).setSelected(false);
                     notifyItemChanged(holder.getAdapterPosition());
                 }
+
             }
         });
     }
@@ -157,6 +162,11 @@ class MutliSelectAdapter extends RecyclerView.Adapter<MutliSelectAdapter.MultiSe
         mutliSelectAdapter.notifyDataSetChanged();
     }
 
+    public void setOnItemCallbackListener(ItemCallbackListener eventListener) {
+        itemCallbackListener = eventListener;
+    }
+
+
     class MultiSelectDialogViewHolder extends RecyclerView.ViewHolder {
         private TextView dialog_name_item;
         private AppCompatCheckBox dialog_item_checkbox;
@@ -168,5 +178,9 @@ class MutliSelectAdapter extends RecyclerView.Adapter<MutliSelectAdapter.MultiSe
             dialog_item_checkbox = (AppCompatCheckBox) view.findViewById(R.id.dialog_item_checkbox);
             main_container = (LinearLayout) view.findViewById(R.id.main_container);
         }
+    }
+
+    public interface ItemCallbackListener {
+        void onItemSelected(Integer id, String name);
     }
 }
